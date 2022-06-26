@@ -236,34 +236,29 @@ n the "List" tab / main screen, clicking on one of the
     """
 
     @app.route('/quizzes', methods=['POST'])
-    def play_quiz():
-
+    def get_quiz_questions():
         try:
-
             body = request.get_json()
-
-            if not ('quiz_category' in body and 'previous_questions' in body):
-                abort(422)
-
             category = body.get('quiz_category')
             previous_questions = body.get('previous_questions')
-
-            if category['type'] == 'click':
-                available_questions = Question.query.filter(
-                    Question.id.notin_((previous_questions))).all()
+            if category['id'] == 0:
+                questions = Question.query.all()
             else:
-                available_questions = Question.query.filter_by(
-                    category=category['id']).filter(Question.id.notin_((previous_questions))).all()
-
-            new_question = available_questions[random.randrange(
-                0, len(available_questions))].format() if len(available_questions) > 0 else None
-
+                questions = Question.query.filter(Question.category == category['id']).all()
+            filtered_questions = [question for question in questions if question.id not in previous_questions]
+            question = random.choice(filtered_questions)
             return jsonify({
                 'success': True,
-                'question': new_question
+                'question': question.format()
             })
         except:
             abort(422)
+
+    """
+    TEST: In the "Play" tab, after a user selects "All Questions",
+    one question at a time is displayed, the user is allowed to answer
+    and shown whether they were correct or not.
+    """
 
     """
     TEST: In the "Play" tab, after a user selects "All" or a category,
